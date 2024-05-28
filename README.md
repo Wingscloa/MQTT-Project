@@ -94,11 +94,7 @@ This project involves a system to manage sensor data using MQTT (Message Queuing
 ## Usage
 1. Update the MQTT and database configuration in the Python script (`mqtt_client.py`):
    ```python
-   MQTT_HOST = "Mqtt.portabo.cz"
-   MQTT_PORT = 8883
-   MQTT_USER = "hackithon"
-   MQTT_PASSWORD = "zuk8uy9aZXU2wM9trqqA"
-
+   
    db = _mysql.Database()
    ```
 
