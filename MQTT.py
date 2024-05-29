@@ -43,7 +43,7 @@ def on_message(client, userdata, msg):
 
         if 'vodomery' in msg.topic: # vodomery
             sql_data["typ"] = "vodomer"
-            sql_data["misto"] = data[0]["misto"]
+            sql_data["nazev"] = data[0]["misto"]
             
         elif 'sensor' in data: # kamery
             # Zpracování zprávy z MQTT, která obsahuje informace o senzoru
