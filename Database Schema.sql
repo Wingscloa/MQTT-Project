@@ -6,7 +6,7 @@ USE DCUK_MQTT;
 CREATE TABLE senzory
 (
   id_sen    BIGINT         NOT NULL AUTO_INCREMENT UNIQUE COMMENT 'ano',
-  nazev     VARCHAR(20)    NOT NULL COMMENT 'ano',
+  nazev     VARCHAR(60)    NOT NULL COMMENT 'ano',
   typ       TEXT           NOT NULL COMMENT 'ano',
   frekvence DECIMAL(10, 2) NULL     COMMENT 'ano',
   misto     VARCHAR(60)    NULL     COMMENT 'ano',
