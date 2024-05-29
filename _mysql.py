@@ -9,7 +9,7 @@ class Database:
         try:
             self.connection = pymysql.connect(host='localhost',
                                     user='root',
-                                    database='test_senzory',
+                                    database='dcuk_mqtt',
                                     cursorclass=pymysql.cursors.DictCursor)
         except(Exception) as error:
             print(f"Error connecting to database {error}")
