@@ -3,3 +3,5 @@ mysql-connector-python
 flask-cors
 fastapi
 uvicorn
+plotly
+pandas
