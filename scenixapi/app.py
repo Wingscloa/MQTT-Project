@@ -132,7 +132,7 @@ def graf_zaznamu():
     finally:
         cursor.close()
         conn.close()
-        return graph_data
+        return result
     # except Exception as e:
     #     logger.error(f"Error fetching raw graph data: {e}")
     #     raise HTTPException(status_code=500, detail="Internal Server Error")
