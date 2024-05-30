@@ -166,10 +166,11 @@ function updatePlotlyTheme(theme) {
           font: { color: "#ffffff" },
         };
 
-  const sensorGraphElement = document.getElementById("sensorGraph");
-  if (sensorGraphElement.data) {
-    Plotly.relayout(sensorGraphElement, layout);
-  }
+  const graphs = document.getElementsByClassName("js-plotly-plot");
+
+  Array.from(graphs).forEach((graph) => {
+    if (graph.data) Plotly.relayout(graph, layout);
+  });
 }
 
 function updateNavbarLogo(theme) {
@@ -200,18 +201,12 @@ async function fetchAndCreateGraph() {
     const response = await fetch("http://127.0.0.1:5000/grafzaznamu/raw");
     const data = await response.json();
 
-    // Přidání logování
-    console.log("Načtená data:", data);
-
     // Připravit data pro Plotly
     const dates = data.map((record) => record.cas);
     const counts = dates.reduce((acc, date) => {
       acc[date] = (acc[date] || 0) + 1;
       return acc;
     }, {});
-
-    console.log("Data pro graf - dates:", dates);
-    console.log("Data pro graf - counts:", counts);
 
     const trace = {
       x: dates,
@@ -223,6 +218,9 @@ async function fetchAndCreateGraph() {
       title: "Počet záznamů historicky",
       xaxis: { title: "Datum" },
       yaxis: { title: "Počet záznamů" },
+      paper_bgcolor: "#121212",
+      plot_bgcolor: "#121212",
+      font: { color: "#ffffff" },
     };
 
     Plotly.newPlot("graph1", [trace], layout);
@@ -233,6 +231,10 @@ async function fetchAndCreateGraph() {
 async function showModal(sensor) {
   modal.style.display = "flex";
   console.log(sensor.id);
+
+  const currentTheme = themeStyle.getAttribute("href").includes("dark")
+    ? "dark"
+    : "light";
 
   try {
     const response = await fetch(
@@ -255,11 +257,25 @@ async function showModal(sensor) {
       },
     ];
 
-    Plotly.newPlot("sensorGraph", sensorGraphData, {
-      title: `Historické záznamy pro sensor ${sensor.nazev}`,
-      xaxis: { title: "Čas" },
-      yaxis: { title: "Počet záznamů" },
-    });
+    if (currentTheme == "dark") {
+      Plotly.newPlot("sensorGraph", sensorGraphData, {
+        title: `Historické záznamy pro sensor ${sensor.nazev}`,
+        xaxis: { title: "Čas" },
+        yaxis: { title: "Počet záznamů" },
+        paper_bgcolor: "#121212",
+        plot_bgcolor: "#121212",
+        font: { color: "#ffffff" },
+      });
+    } else {
+      Plotly.newPlot("sensorGraph", sensorGraphData, {
+        title: `Historické záznamy pro sensor ${sensor.nazev}`,
+        xaxis: { title: "Čas" },
+        yaxis: { title: "Počet záznamů" },
+        paper_bgcolor: "#ffffff",
+        plot_bgcolor: "#ffffff",
+        font: { color: "#000000" },
+      });
+    }
   } catch (error) {
     console.error("Chyba při načítání historických dat:", error);
   }
