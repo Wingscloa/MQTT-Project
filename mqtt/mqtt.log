@@ -1,0 +1,2 @@
+/app/MQTT.py:80: DeprecationWarning: Callback API version 1 is deprecated, update to latest version
+  client = mqtt.Client(protocol=mqtt.MQTTv31)
