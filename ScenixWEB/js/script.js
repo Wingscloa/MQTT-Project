@@ -220,7 +220,7 @@ async function fetchAndCreateGraph() {
     };
 
     const layout = {
-      title: "Počet záznamů za den",
+      title: "Počet záznamů historicky",
       xaxis: { title: "Datum" },
       yaxis: { title: "Počet záznamů" },
     };
