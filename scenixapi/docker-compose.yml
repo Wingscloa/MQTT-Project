@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  senzory-api:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: host.docker.internal  # Special DNS name to access host machine
+      DB_USER: root
+      DB_PASSWORD: ''
+      DB_NAME: dcuk_mqtt
