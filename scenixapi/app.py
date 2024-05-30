@@ -25,7 +25,7 @@ def get_db_connection():
     return mysql.connector.connect(
         host=os.getenv('DB_HOST','db'),  # Adresa hostitele databáze
         user=os.getenv('DB_USER', 'root'),  # Uživatelské jméno pro připojení k databázi
-        database=os.getenv('DB_NAME', 'dcuk_mqtt_docker')  # Název databáze
+        database=os.getenv('DB_NAME', 'dcuk_mqtt')  # Název databáze
     )
 # Model senzoru pro validaci a serializaci dat
 # class Sensor(BaseModel):
@@ -122,7 +122,7 @@ def get_sensors():
 
 @app.get("/grafzaznamu/raw")
 def graf_zaznamu():
-    conn = get_db_connection()
+    conn = get_db_connection()  # Získání připojení k databázi
     cursor = conn.cursor(dictionary=True)
 
     try:
@@ -130,29 +130,15 @@ def graf_zaznamu():
         cursor.execute(query)
         result = cursor.fetchall()
 
-        data = {}
-        for record in result:
-            cas = datetime.strptime(record['cas'], '%Y-%m-%d %H:%M:%S')
-            date_str = cas.strftime('%Y-%m-%d')
-            if date_str in data:
-                data[date_str] += 1
-            else:
-                data[date_str] = 1
-
-        graph_data = [{"date": date, "count": count} for date, count in data.items()]
-
-        # Přidání logování
-        print("Vrácená data pro graf:", graph_data)
-
     except Exception as e:
         print(f"Error: {e}")
-        graph_data = []
+        result = None
 
     finally:
         cursor.close()
         conn.close()
 
-    return graph_data
+    return result
 
 
 

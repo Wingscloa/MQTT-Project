@@ -64,8 +64,11 @@ async function fetchAndCreateGraph() {
     console.log("Načtená data:", data);
 
     // Připravit data pro Plotly
-    const dates = data.map((record) => record.date);
-    const counts = data.map((record) => record.count);
+    const dates = data.map((record) => record.cas);
+    const counts = dates.reduce((acc, date) => {
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {});
 
     console.log("Data pro graf - dates:", dates);
     console.log("Data pro graf - counts:", counts);
@@ -82,7 +85,7 @@ async function fetchAndCreateGraph() {
       yaxis: { title: "Počet záznamů" },
     };
 
-    Plotly.newPlot("graf", [trace], layout);
+    Plotly.newPlot("graph1", [trace], layout);
   } catch (error) {
     console.error("Error:", error);
   }
