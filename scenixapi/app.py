@@ -25,7 +25,7 @@ def get_db_connection():
     return mysql.connector.connect(
         host=os.getenv('DB_HOST','db'),  # Adresa hostitele databáze
         user=os.getenv('DB_USER', 'root'),  # Uživatelské jméno pro připojení k databázi
-        database=os.getenv('DB_NAME', 'dcuk_mqtt')  # Název databáze
+        database=os.getenv('DB_NAME', 'dcuk_mqtt_docker')  # Název databáze
     )
 # Model senzoru pro validaci a serializaci dat
 # class Sensor(BaseModel):

@@ -1,6 +1,23 @@
 version: '3.8'
 
 services:
+  
+  mariadb:
+    image: mariadb
+    container_name: scenix_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: dcuk
+      MYSQL_DATABASE: dcuk_mqtt_docker
+      MYSQL_USER: dcuk_user
+      MYSQL_PASSWORD: dcuk
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./mariadb_data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d
+
+
   senzory-api:
     build:
       context: ./scenixapi

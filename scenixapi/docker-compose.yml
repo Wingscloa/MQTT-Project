@@ -9,4 +9,4 @@ services:
       DB_HOST: host.docker.internal  # Special DNS name to access host machine
       DB_USER: root
       DB_PASSWORD: ''
-      DB_NAME: dcuk_mqtt
+      DB_NAME: dcuk_mqtt_docker
