@@ -111,33 +111,36 @@ def get_sensors():
         logger.error(f"Error fetching sensor count: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-# Endpoint to get raw data graph
+@app.get("/modal/")
+
 @app.get("/grafzaznamu/raw")
 def graf_zaznamu():
+    conn = get_db_connection()  # Získání připojení k databázi
+    cursor = conn.cursor(dictionary=True)
+
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         query = "SELECT z.cas FROM zaznamy as z"
         cursor.execute(query)
         result = cursor.fetchall()
-        data = {}
-        for record in result:
-            cas = datetime.datetime.strptime(record['cas'], '%Y-%m-%d %H:%M:%S')
-            date_str = cas.strftime('%Y-%m-%d')
-            if date_str in data:
-                data[date_str] += 1
-            else:
-                data[date_str] = 1
-        graph_data = [{"date": date, "count": count} for date, count in data.items()]
-        logger.info(f"Returned data for graph: {graph_data}")
+
+    except Exception as e:
+        print(f"Error: {e}")
+        result = None
+
+    finally:
         cursor.close()
         conn.close()
         return graph_data
-    except Exception as e:
-        logger.error(f"Error fetching raw graph data: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+    # except Exception as e:
+    #     logger.error(f"Error fetching raw graph data: {e}")
+    #     raise HTTPException(status_code=500, detail="Internal Server Error")
 
-# Endpoint to get graph as HTML response
+    # return result
+
+
+
 @app.get("/grafzaznamu/graf", response_class=HTMLResponse)
 def graf_zaznamu_graf():
     try:
@@ -158,6 +161,26 @@ def graf_zaznamu_graf():
     except Exception as e:
         logger.error(f"Error generating graph: {e}")
         return HTMLResponse(content=f"<h1>Error: {e}</h1>", status_code=500)
+
+@app.get("/grafzaznamu/{sensor_id}")
+def graf_zaznamu_sensor(sensor_id: int):
+    conn = get_db_connection()  # Získání připojení k databázi
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        query = "SELECT z.cas FROM zaznamy z WHERE z.id_sen = %s"
+        cursor.execute(query, (sensor_id,))
+        results = cursor.fetchall()
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return f"<h1>Error: {e}</h1>"
+
+    finally:
+        cursor.close()
+        conn.close()
+
+    return results
 
 if __name__ == '__main__':
     import uvicorn
