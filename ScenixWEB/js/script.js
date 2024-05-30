@@ -55,41 +55,6 @@ async function fetchRecordsInLastMinute() {
     return 0; // Return 0 if there's an error
   }
 }
-async function fetchAndCreateGraph() {
-  try {
-    const response = await fetch("http://127.0.0.1:5000/grafzaznamu/raw");
-    const data = await response.json();
-
-    // Přidání logování
-    console.log("Načtená data:", data);
-
-    // Připravit data pro Plotly
-    const dates = data.map((record) => record.cas);
-    const counts = dates.reduce((acc, date) => {
-      acc[date] = (acc[date] || 0) + 1;
-      return acc;
-    }, {});
-
-    console.log("Data pro graf - dates:", dates);
-    console.log("Data pro graf - counts:", counts);
-
-    const trace = {
-      x: dates,
-      y: counts,
-      type: "scatter",
-    };
-
-    const layout = {
-      title: "Počet záznamů za den",
-      xaxis: { title: "Datum" },
-      yaxis: { title: "Počet záznamů" },
-    };
-
-    Plotly.newPlot("graph1", [trace], layout);
-  } catch (error) {
-    console.error("Error:", error);
-  }
-}
 
 function saveScrollPosition() {
   localStorage.setItem("scrollPosition", window.scrollY);
@@ -175,6 +140,7 @@ window.addEventListener("beforeunload", saveScrollPosition);
 setInterval(() => {
   saveScrollPosition();
   generateSensorCards();
+  fetchAndCreateGraph();
 }, 60000);
 
 window.addEventListener("DOMContentLoaded", async (event) => {
@@ -228,31 +194,74 @@ themeToggleBtn.addEventListener("click", () => {
 
 const modal = document.getElementById("modal");
 const span = document.getElementsByClassName("close")[0];
+
+async function fetchAndCreateGraph() {
+  try {
+    const response = await fetch("http://127.0.0.1:5000/grafzaznamu/raw");
+    const data = await response.json();
+
+    // Přidání logování
+    console.log("Načtená data:", data);
+
+    // Připravit data pro Plotly
+    const dates = data.map((record) => record.cas);
+    const counts = dates.reduce((acc, date) => {
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {});
+
+    console.log("Data pro graf - dates:", dates);
+    console.log("Data pro graf - counts:", counts);
+
+    const trace = {
+      x: dates,
+      y: counts,
+      type: "scatter",
+    };
+
+    const layout = {
+      title: "Počet záznamů za den",
+      xaxis: { title: "Datum" },
+      yaxis: { title: "Počet záznamů" },
+    };
+
+    Plotly.newPlot("graph1", [trace], layout);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
 async function showModal(sensor) {
   modal.style.display = "flex";
   console.log(sensor.id);
 
   try {
-    const data = await fetchHistoricalDelay(sensor.id);
+    const response = await fetch(
+      `http://localhost:5000/grafzaznamu/${sensor.id}`
+    ); // Získání dat z endpointu
+    const data = await response.json(); // Převedení odpovědi na JSON formát
     console.log(data);
 
+    dates = data.map((record) => record.cas);
+    count = dates.reduce((acc, date) => {
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {});
     const sensorGraphData = [
       {
-        x: data.data.map((record) => record.timestamp),
-        y: data.data.map((record) => record.delay),
+        x: dates, // Použití časů získaných z endpointu
+        y: count,
         type: "scatter",
-        mode: "lines+markers",
-        name: `Historický delay pro sensor ${sensor.nazev}`,
+        name: `Historické záznamy pro sensor ${sensor.nazev}`,
       },
     ];
 
     Plotly.newPlot("sensorGraph", sensorGraphData, {
-      title: `Historický delay pro sensor ${sensor.nazev}`,
+      title: `Historické záznamy pro sensor ${sensor.nazev}`,
       xaxis: { title: "Čas" },
-      yaxis: { title: "Zpoždění (sekundy)" },
+      yaxis: { title: "Počet záznamů" },
     });
   } catch (error) {
-    console.error("Error fetching historical delay:", error);
+    console.error("Chyba při načítání historických dat:", error);
   }
 }
 

@@ -120,6 +120,8 @@ def get_sensors():
 
 # Endpoint pro graf ze zaznamu RAW DATA (CAS -> Pocet poslanych zaznamu)
 
+@app.get("/modal/")
+
 @app.get("/grafzaznamu/raw")
 def graf_zaznamu():
     conn = get_db_connection()  # Získání připojení k databázi
@@ -175,6 +177,26 @@ def graf_zaznamu_graf():
         conn.close()
 
     return HTMLResponse(content=graph_html)
+
+@app.get("/grafzaznamu/{sensor_id}")
+def graf_zaznamu_sensor(sensor_id: int):
+    conn = get_db_connection()  # Získání připojení k databázi
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        query = "SELECT z.cas FROM zaznamy z WHERE z.id_sen = %s"
+        cursor.execute(query, (sensor_id,))
+        results = cursor.fetchall()
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return f"<h1>Error: {e}</h1>"
+
+    finally:
+        cursor.close()
+        conn.close()
+
+    return results
 
 if __name__ == '__main__':
     import uvicorn
