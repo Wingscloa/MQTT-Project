@@ -119,30 +119,43 @@ def get_sensors():
     return result
 
 # Endpoint pro graf ze zaznamu RAW DATA (CAS -> Pocet poslanych zaznamu)
+
 @app.get("/grafzaznamu/raw")
 def graf_zaznamu():
-    conn = get_db_connection()  # Získání připojení k databázi
+    conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
     try:
         query = "SELECT z.cas FROM zaznamy as z"
         cursor.execute(query)
-        
-        # Fetch all results to ensure no unread results remain
         result = cursor.fetchall()
+
+        data = {}
+        for record in result:
+            cas = datetime.strptime(record['cas'], '%Y-%m-%d %H:%M:%S')
+            date_str = cas.strftime('%Y-%m-%d')
+            if date_str in data:
+                data[date_str] += 1
+            else:
+                data[date_str] = 1
+
+        graph_data = [{"date": date, "count": count} for date, count in data.items()]
+
+        # Přidání logování
+        print("Vrácená data pro graf:", graph_data)
 
     except Exception as e:
         print(f"Error: {e}")
-        result = None
+        graph_data = []
 
     finally:
         cursor.close()
         conn.close()
 
-    return result
+    return graph_data
 
 
-# Endpoint pro graf ze zaznamu (CAS -> Pocet poslanych zaznamu)
+
 @app.get("/grafzaznamu/graf", response_class=HTMLResponse)
 def graf_zaznamu_graf():
     conn = get_db_connection()  # Get database connection
