@@ -1,0 +1,6 @@
+[submodule "scenixapi"]
+	path = scenixapi
+	url = https://github.com/JP1Q/scenixapi
+[submodule "ScenixWEB"]
+	path = ScenixWEB
+	url = https://github.com/JP1Q/ScenixWEB
