@@ -1,80 +1,46 @@
-CREATE DATABASE DCUK_MQTT;
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: May 30, 2024 at 02:20 PM
+-- Server version: 10.4.28-MariaDB
+-- PHP Version: 8.2.4
 
-USE DCUK_MQTT;
-
-
-CREATE TABLE senzory
-(
-  id_sen    BIGINT         NOT NULL AUTO_INCREMENT UNIQUE COMMENT 'ano',
-  nazev     VARCHAR(60)    NOT NULL COMMENT 'ano',
-  typ       TEXT           NOT NULL COMMENT 'ano',
-  frekvence DECIMAL(10, 2) NULL     COMMENT 'ano',
-  misto     VARCHAR(60)    NULL     COMMENT 'ano',
-  id_stav   BIGINT         NOT NULL DEFAULT 1,
-  PRIMARY KEY (id_sen)
-);
-
-CREATE TABLE stav
-(
-  id_stav BIGINT      NOT NULL AUTO_INCREMENT UNIQUE,
-  nazev   VARCHAR(20) NULL    ,
-  popis   TEXT        NULL     COMMENT 'pricina',
-  barva   VARCHAR(20) NULL     COMMENT 'color v hex',
-  PRIMARY KEY (id_stav)
-);
-
-CREATE TABLE zaznamy
-(
-  id_zaz BIGINT      NOT NULL AUTO_INCREMENT UNIQUE COMMENT 'NE',
-  id_sen BIGINT      NOT NULL COMMENT 'ano',
-  cas    TIMESTAMP   NOT NULL DEFAULT now() COMMENT 'NE',
-  počasí VARCHAR(20) NULL     COMMENT 'NE',
-  PRIMARY KEY (id_zaz)
-);
-
-CREATE VIEW zaznamy_view AS
-WITH cte AS (
-    SELECT 
-        id_zaz,
-        id_sen,
-        cas,
-        LEAD(cas) OVER (PARTITION BY id_sen ORDER BY cas) AS cas2
-    FROM zaznamy
-)
-SELECT
-    id_sen,
-    cas AS cas1,
-    cas2,
-    TIMEDIFF(cas2, cas) AS rozdil
-FROM cte
-WHERE cas2 IS NOT NULL
-ORDER BY id_sen, cas;
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
 
 
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
 
-ALTER TABLE zaznamy
-  ADD CONSTRAINT FK_senzory_TO_zaznamy
-    FOREIGN KEY (id_sen)
-    REFERENCES senzory (id_sen);
+--
+-- Database: `dcuk_mqtt`
+--
+CREATE DATABASE IF NOT EXISTS `dcuk_mqtt_docker` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `dcuk_mqtt_docker`;
 
-ALTER TABLE senzory
-  ADD CONSTRAINT FK_stav_TO_senzory
-    FOREIGN KEY (id_stav)
-    REFERENCES stav (id_stav);
+-- --------------------------------------------------------
 
+--
+-- Table structure for table `senzory`
+--
 
-INSERT INTO stav (nazev, popis,barva) VALUES 
-('vypocet_zac', 'Tento stav indikuje, že výpočet právě začal. Všechny systémy by měly být připravené na spuštění úloh.',"#DE9A26"), 
-('vypocet_pru', 'Tento stav znamená, že výpočet právě probíhá. Systémy aktivně zpracovávají data a vykonávají úlohy.','#DEB126'),
-('vypocet_skoro', 'Tento stav naznačuje, že výpočet je téměř dokončen. Systémy by měly připravovat finální kroky a závěrečné operace.',"#DEC726"),
-('funguje', 'Tento stav signalizuje, že vše funguje bez problémů. Systémy jsou v normálním provozu a nejsou detekovány žádné chyby.',"#5FDE26"),
-('bacha', 'Tento stav upozorňuje na potenciální problém nebo varování. Systémy by měly být monitorovány, ale zatím není nutný zásah.','##7B8945'),
-('neco se deje', 'Tento stav indikuje, že se v systému děje něco neočekávaného. Může být potřeba bližší analýza nebo zásah.',"#DE266C"),
-('pohni', 'Tento stav znamená, že je potřeba rychlý zásah. Systémy mohou být v kritickém stavu a vyžadují okamžitou pozornost.','#FF0E00');
+CREATE TABLE `senzory` (
+  `id_sen` bigint(20) NOT NULL COMMENT 'ano',
+  `nazev` varchar(20) NOT NULL COMMENT 'ano',
+  `typ` text NOT NULL COMMENT 'ano',
+  `frekvence` decimal(10,2) DEFAULT NULL COMMENT 'ano',
+  `misto` varchar(60) DEFAULT NULL COMMENT 'ano',
+  `id_stav` bigint(20) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-
---  POD TADYTIM BY NIC NEMELO BYT BTW!!!!
-
+--
+-- Dumping data for table `senzory`
+--
 
 INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`) VALUES
 (1, 'Bez nazvu', 'vodomer', NULL, 'zskamenickatv', 1),
@@ -137,7 +103,8 @@ INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`
 (58, 'zsvrchlickeho_prista', 'vodomer', NULL, 'Bez pozice', 1),
 (59, 'eui-24e124785c461081', 'milesight_em300-th', NULL, '799/7a, Sociální péče, Sídliště Pod Holoměří, Bukov, Ústí na', 1),
 (60, 'eui-24e124785d199555', 'milesight_em300-th', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
-(61, 'eui-70b3d57ed0064636', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
+(61, 'eui-70b3d57ed0064636', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1);
+INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`) VALUES
 (62, 'eui-70b3d57ed00620a2', 'CO2', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
 (63, 'eui-24e124713d321868', 'milesight_em310-UDL', NULL, '292, Vítězná, Útočiště, Klášterec nad Ohří, okres Chomutov, ', 1),
 (64, 'rack-tep-vlh-ele-tes', 'rack-sensor', NULL, '799/7a, Sociální péče, Sídliště Pod Holoměří, Bukov, Ústí na', 1),
@@ -181,7 +148,8 @@ INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`
 (102, 'eui-70b3d57ed006209f', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (103, 'eui-24e124785d161214', 'milesight_em300-th', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
 (104, 'eui-70b3d57ed00620a0', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
-(105, 'rack-tep-vlh-ele-tes', 'rack-sensor', NULL, '799/7a, Sociální péče, Sídliště Pod Holoměří, Bukov, Ústí na', 1),
+(105, 'rack-tep-vlh-ele-tes', 'rack-sensor', NULL, '799/7a, Sociální péče, Sídliště Pod Holoměří, Bukov, Ústí na', 1);
+INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`) VALUES
 (106, 'eui-24e124785d199642', 'milesight_em300-th', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
 (107, 'eui-70b3d57ed0062098', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (108, 'zsvrchlickeho_prista', 'vodomer', NULL, 'Bez pozice', 1),
@@ -226,7 +194,8 @@ INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`
 (147, 'rack-tep-vlh-ele-tes', 'rack-sensor', NULL, '799/7a, Sociální péče, Sídliště Pod Holoměří, Bukov, Ústí na', 1),
 (148, 'eui-24e124785d166511', 'milesight_em300-th', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (149, 'eui-70b3d57ed006209f', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
-(150, 'eui-24e124785d166440', 'milesight_em300-th', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
+(150, 'eui-24e124785d166440', 'milesight_em300-th', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1);
+INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`) VALUES
 (151, 'eui-70b3d57ed00620a0', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (152, 'zsvrchlickeho_prista', 'vodomer', NULL, 'Bez pozice', 1),
 (153, 'rack-tep-vlh-ele-tes', 'rack-sensor', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
@@ -273,7 +242,8 @@ INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`
 (194, 'eui-70b3d57ed00620a1', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (195, 'eui-24e124785d166659', 'milesight_em300-th', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
 (196, 'eui-70b3d57ed0066459', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
-(197, 'eui-24e124785c461081', 'milesight_em300-th', NULL, '799/7a, Sociální péče, Sídliště Pod Holoměří, Bukov, Ústí na', 1),
+(197, 'eui-24e124785c461081', 'milesight_em300-th', NULL, '799/7a, Sociální péče, Sídliště Pod Holoměří, Bukov, Ústí na', 1);
+INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`) VALUES
 (198, 'eui-24e124785d199555', 'milesight_em300-th', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (199, 'eui-24e124713d321868', 'milesight_em310-UDL', NULL, '292, Vítězná, Útočiště, Klášterec nad Ohří, okres Chomutov, ', 1),
 (200, 'rack-tep-vlh-ele-tes', 'rack-sensor', NULL, '799/7a, Sociální péče, Sídliště Pod Holoměří, Bukov, Ústí na', 1),
@@ -317,7 +287,8 @@ INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`
 (238, 'eui-24e124785d166440', 'milesight_em300-th', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
 (239, 'rack-tep-vlh-ele-tes', 'rack-sensor', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
 (240, 'zsvrchlickeho_prista', 'vodomer', NULL, 'Bez pozice', 1),
-(241, 'eui-70b3d57ed006209f', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
+(241, 'eui-70b3d57ed006209f', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1);
+INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`) VALUES
 (242, 'eui-24e124785d163091', 'milesight_em300-th', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
 (243, 'eui-70b3d57ed0062098', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (244, 'rack-tep-vlh-ele-tes', 'rack-sensor', NULL, '799/7a, Sociální péče, Sídliště Pod Holoměří, Bukov, Ústí na', 1),
@@ -361,7 +332,8 @@ INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`
 (282, 'eui-24e124785d161620', 'milesight_em300-th', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (283, 'eui-70b3d57ed0064636', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (284, 'zsvrchlickeho_prista', 'vodomer', NULL, 'Bez pozice', 1),
-(285, 'eui-70b3d57ed00620a2', 'CO2', NULL, 'UJEP Kampus, České mládeže, U polikliniky, Ústí nad Labem, o', 1),
+(285, 'eui-70b3d57ed00620a2', 'CO2', NULL, 'UJEP Kampus, České mládeže, U polikliniky, Ústí nad Labem, o', 1);
+INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`) VALUES
 (286, 'rack-tep-vlh-ele-tes', 'rack-sensor', NULL, '799/7a, Sociální péče, Sídliště Pod Holoměří, Bukov, Ústí na', 1),
 (287, 'eui-24e124785d166701', 'milesight_em300-th', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (288, 'eui-70b3d57ed006473f', 'CO2', NULL, 'UJEP Kampus, České mládeže, U polikliniky, Ústí nad Labem, o', 1),
@@ -405,7 +377,8 @@ INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`
 (326, 'eui-70b3d57ed0062098', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (327, 'eui-70b3d57ed006645b', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (328, 'eui-70b3d57ed00620a1', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
-(329, 'eui-24e124713d168111', 'milesight_em310-UDL', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
+(329, 'eui-24e124713d168111', 'milesight_em310-UDL', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1);
+INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`) VALUES
 (330, 'eui-24e124785d161620', 'milesight_em300-th', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
 (331, 'zsvrchlickeho_prista', 'vodomer', NULL, 'Bez pozice', 1),
 (332, 'eui-70b3d57ed0064636', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
@@ -451,7 +424,8 @@ INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`
 (372, 'eui-24e124785d160333', 'milesight_em300-th', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
 (373, 'eui-70b3d57ed0064636', 'CO2', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
 (374, 'eui-24e124136d056316', 'milesight_em300-th', NULL, '799/7a, Sociální péče, Sídliště Pod Holoměří, Bukov, Ústí na', 1),
-(375, 'rack-tep-vlh-ele-tes', 'rack-sensor', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
+(375, 'rack-tep-vlh-ele-tes', 'rack-sensor', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1);
+INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`) VALUES
 (376, 'eui-70b3d57ed00620a2', 'CO2', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
 (377, 'eui-24e124785d161214', 'milesight_em300-th', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
 (378, 'eui-70b3d57ed006473f', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
@@ -495,7 +469,8 @@ INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`
 (416, 'zsvrchlickeho_prista', 'vodomer', NULL, 'Bez pozice', 1),
 (417, 'eui-70b3d57ed006209e', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (418, 'rack-tep-vlh-ele-tes', 'rack-sensor', NULL, '799/7a, Sociální péče, Sídliště Pod Holoměří, Bukov, Ústí na', 1),
-(419, 'eui-24e124785d166658', 'milesight_em300-th', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
+(419, 'eui-24e124785d166658', 'milesight_em300-th', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1);
+INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`) VALUES
 (420, 'eui-24e124785d166522', 'milesight_em300-th', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (421, 'eui-24e124785d160333', 'milesight_em300-th', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (422, 'eui-70b3d57ed0064636', 'CO2', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
@@ -539,7 +514,8 @@ INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`
 (460, 'eui-70b3d57ed00620a0', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (461, 'zsvrchlickeho_prista', 'vodomer', NULL, 'Bez pozice', 1),
 (462, 'eui-70b3d57ed0062098', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
-(463, 'rack-tep-vlh-ele-tes', 'rack-sensor', NULL, '799/7a, Sociální péče, Sídliště Pod Holoměří, Bukov, Ústí na', 1),
+(463, 'rack-tep-vlh-ele-tes', 'rack-sensor', NULL, '799/7a, Sociální péče, Sídliště Pod Holoměří, Bukov, Ústí na', 1);
+INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`) VALUES
 (464, 'eui-24e124785c461081', 'milesight_em300-th', NULL, '799/7a, Sociální péče, Sídliště Pod Holoměří, Bukov, Ústí na', 1),
 (465, 'eui-24e124713d321868', 'milesight_em310-UDL', NULL, '292, Vítězná, Útočiště, Klášterec nad Ohří, okres Chomutov, ', 1),
 (466, 'eui-70b3d57ed006209c', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
@@ -551,8 +527,7 @@ INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`
 (472, 'eui-70b3d57ed006209e', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (473, 'eui-24e124785d166658', 'milesight_em300-th', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (474, 'eui-24e124785d166522', 'milesight_em300-th', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
-(475, 'zsvrchlickeho_prista', 'vodomer', NULL, 'Bez pozice', 1);
-INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`) VALUES
+(475, 'zsvrchlickeho_prista', 'vodomer', NULL, 'Bez pozice', 1),
 (476, 'eui-24e124785d160333', 'milesight_em300-th', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (477, 'eui-24e124136d056316', 'milesight_em300-th', NULL, '799/7a, Sociální péče, Sídliště Pod Holoměří, Bukov, Ústí na', 1),
 (478, 'rack-tep-vlh-ele-tes', 'rack-sensor', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
@@ -584,7 +559,8 @@ INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`
 (504, 'eui-70b3d57ed00620a0', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (505, 'eui-24e124785c461081', 'milesight_em300-th', NULL, '799/7a, Sociální péče, Sídliště Pod Holoměří, Bukov, Ústí na', 1),
 (506, 'eui-24e124785d199555', 'milesight_em300-th', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
-(507, 'eui-70b3d57ed0062098', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
+(507, 'eui-70b3d57ed0062098', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1);
+INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`) VALUES
 (508, 'eui-24e124713d321868', 'milesight_em310-UDL', NULL, '292, Vítězná, Útočiště, Klášterec nad Ohří, okres Chomutov, ', 1),
 (509, 'eui-70b3d57ed006209c', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (510, 'eui-24e124785d161970', 'milesight_em300-th', NULL, 'UJEP Kampus, Pasteurova, U polikliniky, Ústí nad Labem, okre', 1),
@@ -596,6 +572,45 @@ INSERT INTO `senzory` (`id_sen`, `nazev`, `typ`, `frekvence`, `misto`, `id_stav`
 (516, 'eui-24e124713d168111', 'milesight_em310-UDL', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (517, 'eui-70b3d57ed006209e', 'CO2', NULL, '750/316, Masarykova, Bukov-střed, Bukov, Ústí nad Labem, okr', 1),
 (518, 'zsvrchlickeho_prista', 'vodomer', NULL, 'Bez pozice', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `stav`
+--
+
+CREATE TABLE `stav` (
+  `id_stav` bigint(20) NOT NULL,
+  `nazev` varchar(20) DEFAULT NULL,
+  `popis` text DEFAULT NULL COMMENT 'pricina',
+  `barva` varchar(20) DEFAULT NULL COMMENT 'color v hex'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `stav`
+--
+
+INSERT INTO `stav` (`id_stav`, `nazev`, `popis`, `barva`) VALUES
+(1, 'vypocet_zac', 'Tento stav indikuje, že výpočet právě začal. Všechny systémy by měly být připravené na spuštění úloh.', '#DE9A26'),
+(2, 'vypocet_pru', 'Tento stav znamená, že výpočet právě probíhá. Systémy aktivně zpracovávají data a vykonávají úlohy.', '#DEB126'),
+(3, 'vypocet_skoro', 'Tento stav naznačuje, že výpočet je téměř dokončen. Systémy by měly připravovat finální kroky a závěrečné operace.', '#DEC726'),
+(4, 'funguje', 'Tento stav signalizuje, že vše funguje bez problémů. Systémy jsou v normálním provozu a nejsou detekovány žádné chyby.', '#5FDE26'),
+(5, 'bacha', 'Tento stav upozorňuje na potenciální problém nebo varování. Systémy by měly být monitorovány, ale zatím není nutný zásah.', '##7B8945'),
+(6, 'neco se deje', 'Tento stav indikuje, že se v systému děje něco neočekávaného. Může být potřeba bližší analýza nebo zásah.', '#DE266C'),
+(7, 'pohni', 'Tento stav znamená, že je potřeba rychlý zásah. Systémy mohou být v kritickém stavu a vyžadují okamžitou pozornost.', '#FF0E00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `zaznamy`
+--
+
+CREATE TABLE `zaznamy` (
+  `id_zaz` bigint(20) NOT NULL COMMENT 'NE',
+  `id_sen` bigint(20) NOT NULL COMMENT 'ano',
+  `cas` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'NE',
+  `počasí` varchar(20) DEFAULT NULL COMMENT 'NE'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `zaznamy`
@@ -735,7 +750,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (131, 20, '2024-05-29 10:46:26', NULL),
 (132, 20, '2024-05-29 10:46:28', NULL),
 (133, 4, '2024-05-29 10:46:28', NULL),
-(134, 3, '2024-05-29 10:46:28', NULL),
+(134, 3, '2024-05-29 10:46:28', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (135, 5, '2024-05-29 10:46:29', NULL),
 (136, 6, '2024-05-29 10:46:29', NULL),
 (137, 20, '2024-05-29 10:46:30', NULL),
@@ -865,7 +881,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (261, 24, '2024-05-29 10:48:57', NULL),
 (262, 22, '2024-05-29 10:48:57', NULL),
 (263, 23, '2024-05-29 10:48:57', NULL),
-(264, 26, '2024-05-29 10:49:00', NULL),
+(264, 26, '2024-05-29 10:49:00', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (265, 27, '2024-05-29 10:49:02', NULL),
 (266, 28, '2024-05-29 10:49:02', NULL),
 (267, 20, '2024-05-29 10:49:03', NULL),
@@ -995,7 +1012,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (391, 10, '2024-05-29 10:51:39', NULL),
 (392, 20, '2024-05-29 10:51:44', NULL),
 (393, 14, '2024-05-29 10:51:48', NULL),
-(394, 13, '2024-05-29 10:51:50', NULL),
+(394, 13, '2024-05-29 10:51:50', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (395, 16, '2024-05-29 10:51:50', NULL),
 (396, 17, '2024-05-29 10:51:52', NULL),
 (397, 20, '2024-05-29 10:51:53', NULL),
@@ -1125,7 +1143,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (521, 20, '2024-05-29 10:58:46', NULL),
 (522, 20, '2024-05-29 10:58:49', NULL),
 (523, 20, '2024-05-29 10:58:50', NULL),
-(524, 20, '2024-05-29 10:58:51', NULL),
+(524, 20, '2024-05-29 10:58:51', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (525, 20, '2024-05-29 10:58:52', NULL),
 (526, 14, '2024-05-29 10:58:53', NULL),
 (527, 20, '2024-05-29 10:58:54', NULL),
@@ -1255,7 +1274,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (651, 20, '2024-05-29 11:01:26', NULL),
 (652, 20, '2024-05-29 11:01:27', NULL),
 (653, 20, '2024-05-29 11:01:28', NULL),
-(654, 2, '2024-05-29 11:01:29', NULL),
+(654, 2, '2024-05-29 11:01:29', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (655, 4, '2024-05-29 11:01:31', NULL),
 (656, 32, '2024-05-29 11:01:32', NULL),
 (657, 20, '2024-05-29 11:01:34', NULL),
@@ -1385,7 +1405,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (781, 20, '2024-05-29 11:10:16', NULL),
 (782, 20, '2024-05-29 11:10:17', NULL),
 (783, 34, '2024-05-29 11:10:22', NULL),
-(784, 35, '2024-05-29 11:10:23', NULL),
+(784, 35, '2024-05-29 11:10:23', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (785, 20, '2024-05-29 11:10:25', NULL),
 (786, 36, '2024-05-29 11:10:27', NULL),
 (787, 20, '2024-05-29 11:10:28', NULL),
@@ -1515,7 +1536,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (911, 24, '2024-05-29 11:13:07', NULL),
 (912, 20, '2024-05-29 11:13:08', NULL),
 (913, 22, '2024-05-29 11:13:09', NULL),
-(914, 23, '2024-05-29 11:13:10', NULL),
+(914, 23, '2024-05-29 11:13:10', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (915, 20, '2024-05-29 11:13:10', NULL),
 (916, 26, '2024-05-29 11:13:11', NULL),
 (917, 27, '2024-05-29 11:13:11', NULL),
@@ -1644,7 +1666,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (1040, 6, '2024-05-29 11:15:42', NULL),
 (1041, 7, '2024-05-29 11:15:43', NULL),
 (1042, 20, '2024-05-29 11:15:45', NULL),
-(1043, 8, '2024-05-29 11:15:45', NULL),
+(1043, 8, '2024-05-29 11:15:45', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (1044, 9, '2024-05-29 11:15:46', NULL),
 (1045, 20, '2024-05-29 11:15:47', NULL),
 (1046, 20, '2024-05-29 11:15:49', NULL),
@@ -1770,7 +1793,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (1166, 26, '2024-05-29 11:18:42', NULL),
 (1167, 27, '2024-05-29 11:18:42', NULL),
 (1168, 28, '2024-05-29 11:18:56', NULL),
-(1169, 30, '2024-05-29 11:18:56', NULL),
+(1169, 30, '2024-05-29 11:18:56', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (1170, 33, '2024-05-29 11:18:57', NULL),
 (1171, 27, '2024-05-29 11:19:13', NULL),
 (1172, 28, '2024-05-29 11:19:15', NULL),
@@ -1897,7 +1921,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (1293, 20, '2024-05-29 11:27:19', NULL),
 (1294, 10, '2024-05-29 11:27:19', NULL),
 (1295, 20, '2024-05-29 11:27:23', NULL),
-(1296, 20, '2024-05-29 11:27:25', NULL),
+(1296, 20, '2024-05-29 11:27:25', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (1297, 32, '2024-05-29 11:27:29', NULL),
 (1298, 14, '2024-05-29 11:27:29', NULL),
 (1299, 20, '2024-05-29 11:27:31', NULL),
@@ -1916,8 +1941,7 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (1312, 22, '2024-05-29 11:27:46', NULL),
 (1313, 26, '2024-05-29 11:27:46', NULL),
 (1314, 27, '2024-05-29 11:27:46', NULL),
-(1315, 20, '2024-05-29 11:27:50', NULL);
-INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
+(1315, 20, '2024-05-29 11:27:50', NULL),
 (1316, 32, '2024-05-29 11:27:52', NULL),
 (1317, 30, '2024-05-29 11:27:53', NULL),
 (1318, 28, '2024-05-29 11:27:53', NULL),
@@ -2024,7 +2048,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (1419, 4, '2024-05-29 11:35:18', NULL),
 (1420, 5, '2024-05-29 11:35:19', NULL),
 (1421, 3, '2024-05-29 11:35:26', NULL),
-(1422, 6, '2024-05-29 11:35:32', NULL),
+(1422, 6, '2024-05-29 11:35:32', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (1423, 7, '2024-05-29 11:35:33', NULL),
 (1424, 8, '2024-05-29 11:35:33', NULL),
 (1425, 9, '2024-05-29 11:35:47', NULL),
@@ -2151,7 +2176,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (1546, 19, '2024-05-29 11:39:14', NULL),
 (1547, 18, '2024-05-29 11:39:15', NULL),
 (1548, 20, '2024-05-29 11:39:16', NULL),
-(1549, 24, '2024-05-29 11:39:16', NULL),
+(1549, 24, '2024-05-29 11:39:16', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (1550, 17, '2024-05-29 11:39:17', NULL),
 (1551, 20, '2024-05-29 11:39:18', NULL),
 (1552, 26, '2024-05-29 11:39:20', NULL),
@@ -2278,7 +2304,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (1673, 20, '2024-05-29 11:42:01', NULL),
 (1674, 10, '2024-05-29 11:42:02', NULL),
 (1675, 20, '2024-05-29 11:42:04', NULL),
-(1676, 20, '2024-05-29 11:42:07', NULL),
+(1676, 20, '2024-05-29 11:42:07', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (1677, 14, '2024-05-29 11:42:10', NULL),
 (1678, 16, '2024-05-29 11:42:11', NULL),
 (1679, 13, '2024-05-29 11:42:12', NULL),
@@ -2405,7 +2432,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (1800, 7, '2024-05-29 11:45:05', NULL),
 (1801, 3, '2024-05-29 11:45:05', NULL),
 (1802, 6, '2024-05-29 11:45:05', NULL),
-(1803, 8, '2024-05-29 11:45:07', NULL),
+(1803, 8, '2024-05-29 11:45:07', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (1804, 9, '2024-05-29 11:45:07', NULL),
 (1805, 10, '2024-05-29 11:45:09', NULL),
 (1806, 20, '2024-05-29 11:45:10', NULL),
@@ -2531,7 +2559,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (1926, 35, '2024-05-29 11:47:39', NULL),
 (1927, 36, '2024-05-29 11:47:40', NULL),
 (1928, 20, '2024-05-29 11:47:41', NULL),
-(1929, 32, '2024-05-29 11:47:42', NULL),
+(1929, 32, '2024-05-29 11:47:42', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (1930, 20, '2024-05-29 11:47:45', NULL),
 (1931, 20, '2024-05-29 11:47:47', NULL),
 (1932, 37, '2024-05-29 11:47:47', NULL),
@@ -2658,7 +2687,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (2053, 14, '2024-05-29 11:50:22', NULL),
 (2054, 20, '2024-05-29 11:50:24', NULL),
 (2055, 13, '2024-05-29 11:50:25', NULL),
-(2056, 20, '2024-05-29 11:50:27', NULL),
+(2056, 20, '2024-05-29 11:50:27', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (2057, 19, '2024-05-29 11:50:27', NULL),
 (2058, 24, '2024-05-29 11:50:30', NULL),
 (2059, 18, '2024-05-29 11:50:30', NULL),
@@ -2785,7 +2815,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (2180, 34, '2024-05-29 11:52:55', NULL),
 (2181, 20, '2024-05-29 11:52:56', NULL),
 (2182, 5, '2024-05-29 11:52:56', NULL),
-(2183, 3, '2024-05-29 11:52:58', NULL),
+(2183, 3, '2024-05-29 11:52:58', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (2184, 7, '2024-05-29 11:52:59', NULL),
 (2185, 6, '2024-05-29 11:52:59', NULL),
 (2186, 8, '2024-05-29 11:53:00', NULL),
@@ -2912,7 +2943,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (2307, 35, '2024-05-29 11:56:42', NULL),
 (2308, 20, '2024-05-29 11:56:43', NULL),
 (2309, 36, '2024-05-29 11:56:44', NULL),
-(2310, 20, '2024-05-29 11:56:46', NULL),
+(2310, 20, '2024-05-29 11:56:46', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (2311, 20, '2024-05-29 11:56:47', NULL),
 (2312, 20, '2024-05-29 11:56:51', NULL),
 (2313, 37, '2024-05-29 11:56:52', NULL),
@@ -3039,7 +3071,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (2434, 20, '2024-05-29 11:59:24', NULL),
 (2435, 20, '2024-05-29 11:59:27', NULL),
 (2436, 16, '2024-05-29 11:59:27', NULL),
-(2437, 20, '2024-05-29 11:59:29', NULL),
+(2437, 20, '2024-05-29 11:59:29', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (2438, 14, '2024-05-29 11:59:29', NULL),
 (2439, 13, '2024-05-29 11:59:29', NULL),
 (2440, 20, '2024-05-29 11:59:31', NULL),
@@ -3166,7 +3199,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (2561, 20, '2024-05-29 12:02:04', NULL),
 (2562, 6, '2024-05-29 12:02:05', NULL),
 (2563, 8, '2024-05-29 12:02:05', NULL),
-(2564, 9, '2024-05-29 12:02:05', NULL),
+(2564, 9, '2024-05-29 12:02:05', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (2565, 20, '2024-05-29 12:02:07', NULL),
 (2566, 10, '2024-05-29 12:02:10', NULL),
 (2567, 17, '2024-05-29 12:02:10', NULL),
@@ -3202,8 +3236,7 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (2597, 2, '2024-05-29 12:02:56', NULL),
 (2598, 21, '2024-05-29 12:02:57', NULL),
 (2599, 31, '2024-05-29 12:02:58', NULL),
-(2600, 4, '2024-05-29 12:02:58', NULL);
-INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
+(2600, 4, '2024-05-29 12:02:58', NULL),
 (2601, 32, '2024-05-29 12:03:00', NULL),
 (2602, 34, '2024-05-29 12:03:00', NULL),
 (2603, 5, '2024-05-29 12:03:01', NULL),
@@ -3293,7 +3326,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (2687, 31, '2024-05-29 12:06:01', NULL),
 (2688, 20, '2024-05-29 12:06:01', NULL),
 (2689, 20, '2024-05-29 12:06:02', NULL),
-(2690, 5, '2024-05-29 12:06:03', NULL),
+(2690, 5, '2024-05-29 12:06:03', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (2691, 34, '2024-05-29 12:06:03', NULL),
 (2692, 40, '2024-05-29 12:06:04', NULL),
 (2693, 3, '2024-05-29 12:06:05', NULL),
@@ -3420,7 +3454,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (2814, 18, '2024-05-29 12:08:55', NULL),
 (2815, 27, '2024-05-29 12:08:56', NULL),
 (2816, 22, '2024-05-29 12:08:56', NULL),
-(2817, 26, '2024-05-29 12:08:57', NULL),
+(2817, 26, '2024-05-29 12:08:57', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (2818, 23, '2024-05-29 12:08:57', NULL),
 (2819, 30, '2024-05-29 12:09:04', NULL),
 (2820, 28, '2024-05-29 12:09:11', NULL),
@@ -3547,7 +3582,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (2941, 23, '2024-05-29 12:17:46', NULL),
 (2942, 20, '2024-05-29 12:17:50', NULL),
 (2943, 33, '2024-05-29 12:17:50', NULL),
-(2944, 28, '2024-05-29 12:17:50', NULL),
+(2944, 28, '2024-05-29 12:17:50', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (2945, 30, '2024-05-29 12:17:52', NULL),
 (2946, 20, '2024-05-29 12:17:54', NULL),
 (2947, 20, '2024-05-29 12:17:55', NULL),
@@ -3674,7 +3710,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (3068, 7, '2024-05-29 12:20:10', NULL),
 (3069, 8, '2024-05-29 12:20:11', NULL),
 (3070, 3, '2024-05-29 12:20:12', NULL),
-(3071, 6, '2024-05-29 12:20:12', NULL),
+(3071, 6, '2024-05-29 12:20:12', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (3072, 9, '2024-05-29 12:20:13', NULL),
 (3073, 20, '2024-05-29 12:20:16', NULL),
 (3074, 20, '2024-05-29 12:20:17', NULL),
@@ -3800,7 +3837,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (3194, 35, '2024-05-29 12:22:54', NULL),
 (3195, 20, '2024-05-29 12:22:55', NULL),
 (3196, 20, '2024-05-29 12:23:03', NULL),
-(3197, 21, '2024-05-29 12:23:04', NULL),
+(3197, 21, '2024-05-29 12:23:04', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (3198, 37, '2024-05-29 12:23:04', NULL),
 (3199, 20, '2024-05-29 12:23:05', NULL),
 (3200, 2, '2024-05-29 12:23:05', NULL),
@@ -3927,7 +3965,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (3321, 10, '2024-05-29 12:25:19', NULL),
 (3322, 17, '2024-05-29 12:25:22', NULL),
 (3323, 16, '2024-05-29 12:25:27', NULL),
-(3324, 14, '2024-05-29 12:25:30', NULL),
+(3324, 14, '2024-05-29 12:25:30', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (3325, 13, '2024-05-29 12:25:31', NULL),
 (3326, 19, '2024-05-29 12:25:33', NULL),
 (3327, 24, '2024-05-29 12:25:35', NULL),
@@ -4053,7 +4092,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (3447, 20, '2024-05-29 12:28:56', NULL),
 (3448, 35, '2024-05-29 12:28:57', NULL),
 (3449, 36, '2024-05-29 12:28:57', NULL),
-(3450, 20, '2024-05-29 12:29:02', NULL),
+(3450, 20, '2024-05-29 12:29:02', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (3451, 20, '2024-05-29 12:29:03', NULL),
 (3452, 21, '2024-05-29 12:29:07', NULL),
 (3453, 37, '2024-05-29 12:29:08', NULL),
@@ -4180,7 +4220,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (3574, 19, '2024-05-29 12:31:36', NULL),
 (3575, 20, '2024-05-29 12:31:38', NULL),
 (3576, 24, '2024-05-29 12:31:38', NULL),
-(3577, 18, '2024-05-29 12:31:40', NULL),
+(3577, 18, '2024-05-29 12:31:40', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (3578, 26, '2024-05-29 12:31:43', NULL),
 (3579, 27, '2024-05-29 12:31:44', NULL),
 (3580, 20, '2024-05-29 12:31:45', NULL),
@@ -4306,7 +4347,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (3700, 34, '2024-05-29 12:34:14', NULL),
 (3701, 5, '2024-05-29 12:34:14', NULL),
 (3702, 20, '2024-05-29 12:34:15', NULL),
-(3703, 20, '2024-05-29 12:34:16', NULL),
+(3703, 20, '2024-05-29 12:34:16', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (3704, 20, '2024-05-29 12:34:17', NULL),
 (3705, 20, '2024-05-29 12:34:18', NULL),
 (3706, 20, '2024-05-29 12:34:19', NULL),
@@ -4433,7 +4475,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (3827, 27, '2024-05-29 12:36:57', NULL),
 (3828, 20, '2024-05-29 12:36:59', NULL),
 (3829, 22, '2024-05-29 12:36:59', NULL),
-(3830, 23, '2024-05-29 12:36:59', NULL),
+(3830, 23, '2024-05-29 12:36:59', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (3831, 20, '2024-05-29 12:37:05', NULL),
 (3832, 20, '2024-05-29 12:37:07', NULL),
 (3833, 33, '2024-05-29 12:37:07', NULL),
@@ -4488,12 +4531,7 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (3882, 33, '2024-05-29 12:37:56', NULL),
 (3883, 20, '2024-05-29 12:37:57', NULL),
 (3884, 30, '2024-05-29 12:37:58', NULL),
-(3885, 28, '2024-05-29 12:37:58', NULL);
-
-
-
--- ZAZNAMY INSERT DATA START 
-INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
+(3885, 28, '2024-05-29 12:37:58', NULL),
 (3886, 20, '2024-05-29 12:37:59', NULL),
 (3887, 20, '2024-05-29 12:38:00', NULL),
 (3888, 20, '2024-05-29 12:38:01', NULL),
@@ -4565,7 +4603,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (3954, 8, '2024-05-29 12:39:19', NULL),
 (3955, 7, '2024-05-29 12:39:20', NULL),
 (3956, 20, '2024-05-29 12:39:21', NULL),
-(3957, 9, '2024-05-29 12:39:21', NULL),
+(3957, 9, '2024-05-29 12:39:21', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (3958, 3, '2024-05-29 12:39:22', NULL),
 (3959, 6, '2024-05-29 12:39:23', NULL),
 (3960, 10, '2024-05-29 12:39:25', NULL),
@@ -4691,7 +4730,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (4080, 30, '2024-05-29 12:41:56', NULL),
 (4081, 20, '2024-05-29 12:41:57', NULL),
 (4082, 20, '2024-05-29 12:42:02', NULL),
-(4083, 36, '2024-05-29 12:42:02', NULL),
+(4083, 36, '2024-05-29 12:42:02', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (4084, 35, '2024-05-29 12:42:02', NULL),
 (4085, 20, '2024-05-29 12:42:04', NULL),
 (4086, 20, '2024-05-29 12:42:07', NULL),
@@ -4818,7 +4858,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (4207, 23, '2024-05-29 12:46:54', NULL),
 (4208, 28, '2024-05-29 12:46:55', NULL),
 (4209, 33, '2024-05-29 12:46:55', NULL),
-(4210, 30, '2024-05-29 12:46:56', NULL),
+(4210, 30, '2024-05-29 12:46:56', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (4211, 20, '2024-05-29 12:46:58', NULL),
 (4212, 20, '2024-05-29 12:46:59', NULL),
 (4213, 36, '2024-05-29 12:47:03', NULL),
@@ -4945,7 +4986,8 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (4334, 6, '2024-05-29 12:49:27', NULL),
 (4335, 10, '2024-05-29 12:49:28', NULL),
 (4336, 20, '2024-05-29 12:49:31', NULL),
-(4337, 20, '2024-05-29 12:49:32', NULL),
+(4337, 20, '2024-05-29 12:49:32', NULL);
+INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (4338, 17, '2024-05-29 12:49:33', NULL),
 (4339, 20, '2024-05-29 12:49:35', NULL),
 (4340, 16, '2024-05-29 12:49:35', NULL),
@@ -5002,3 +5044,93 @@ INSERT INTO `zaznamy` (`id_zaz`, `id_sen`, `cas`, `počasí`) VALUES
 (4391, 27, '2024-05-29 12:52:05', NULL);
 
 -- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `zaznamy_view`
+-- (See below for the actual view)
+--
+CREATE TABLE `zaznamy_view` (
+`id_sen` bigint(20)
+,`cas1` timestamp
+,`cas2` timestamp
+,`rozdil` time
+);
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `zaznamy_view`
+--
+DROP TABLE IF EXISTS `zaznamy_view`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `zaznamy_view`  AS WITH cte AS (SELECT `zaznamy`.`id_zaz` AS `id_zaz`, `zaznamy`.`id_sen` AS `id_sen`, `zaznamy`.`cas` AS `cas`, lead(`zaznamy`.`cas`,1) over ( partition by `zaznamy`.`id_sen` order by `zaznamy`.`cas`) AS `cas2` FROM `zaznamy`)  SELECT `cte`.`id_sen` AS `id_sen`, `cte`.`cas` AS `cas1`, `cte`.`cas2` AS `cas2`, timediff(`cte`.`cas2`,`cte`.`cas`) AS `rozdil` FROM `cte` WHERE `cte`.`cas2` is not null ORDER BY `cte`.`id_sen` ASC, `cte`.`cas` ASC`cas`  ;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `senzory`
+--
+ALTER TABLE `senzory`
+  ADD PRIMARY KEY (`id_sen`),
+  ADD UNIQUE KEY `id_sen` (`id_sen`),
+  ADD KEY `FK_stav_TO_senzory` (`id_stav`);
+
+--
+-- Indexes for table `stav`
+--
+ALTER TABLE `stav`
+  ADD PRIMARY KEY (`id_stav`),
+  ADD UNIQUE KEY `id_stav` (`id_stav`);
+
+--
+-- Indexes for table `zaznamy`
+--
+ALTER TABLE `zaznamy`
+  ADD PRIMARY KEY (`id_zaz`),
+  ADD UNIQUE KEY `id_zaz` (`id_zaz`),
+  ADD KEY `FK_senzory_TO_zaznamy` (`id_sen`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `senzory`
+--
+ALTER TABLE `senzory`
+  MODIFY `id_sen` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'ano', AUTO_INCREMENT=519;
+
+--
+-- AUTO_INCREMENT for table `stav`
+--
+ALTER TABLE `stav`
+  MODIFY `id_stav` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `zaznamy`
+--
+ALTER TABLE `zaznamy`
+  MODIFY `id_zaz` bigint(20) NOT NULL AUTO_INCREMENT COMMENT 'NE', AUTO_INCREMENT=4392;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `senzory`
+--
+ALTER TABLE `senzory`
+  ADD CONSTRAINT `FK_stav_TO_senzory` FOREIGN KEY (`id_stav`) REFERENCES `stav` (`id_stav`);
+
+--
+-- Constraints for table `zaznamy`
+--
+ALTER TABLE `zaznamy`
+  ADD CONSTRAINT `FK_senzory_TO_zaznamy` FOREIGN KEY (`id_sen`) REFERENCES `senzory` (`id_sen`);
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

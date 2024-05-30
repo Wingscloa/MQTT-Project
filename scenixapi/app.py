@@ -1,195 +1,164 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
-from typing import List
 import mysql.connector
 import os
 import datetime
 import plotly.express as px
 import pandas as pd
+import logging
 
+# Initialize FastAPI app
 app = FastAPI()
 
-# Přidání middleware pro povolení CORS (Cross-Origin Resource Sharing)
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Add middleware for CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Povolit všechny zdroje
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Funkce pro získání připojení k databázi
+# Function to get database connection
 def get_db_connection():
-    return mysql.connector.connect(
-        host=os.getenv('DB_HOST','db'),  # Adresa hostitele databáze
-        user=os.getenv('DB_USER', 'root'),  # Uživatelské jméno pro připojení k databázi
-        database=os.getenv('DB_NAME', 'dcuk_mqtt_docker')  # Název databáze
-    )
-# Model senzoru pro validaci a serializaci dat
-# class Sensor(BaseModel):
-#     id: int
-#     nazev: str
-#     typ: str
-#     misto: str
-#     frekvence: str
-#     stav: str
-#     count_records: int
+    try:
+        conn = mysql.connector.connect(
+            host=os.getenv('DB_HOST', 'mariadb'), 
+            user=os.getenv('DB_USER', 'dcuk_user'),
+            password=os.getenv('DB_PASSWORD', 'dcuk'),
+            database=os.getenv('DB_NAME', 'dcuk_mqtt_docker')
+        )
+        return conn
+    except mysql.connector.Error as err:
+        logger.error(f"Error connecting to database: {err}")
+        raise HTTPException(status_code=500, detail="Database connection failed")
 
-# Endpoint pro získání seznamu senzorů
+# Endpoint to get sensor list
 @app.get("/senzory")
 def get_senzory():
-    conn = get_db_connection()  # Získání připojení k databázi
-    cursor = conn.cursor(dictionary=True)
-    
-    # Dotaz na získání seznamu senzorů s počtem záznamů
-    query = """
-    SELECT s.id_sen, s.nazev, s.typ, s.misto, s.frekvence, st.barva as stav, 
-           (SELECT COUNT(*) FROM zaznamy z WHERE z.id_sen = s.id_sen) as count_records
-    FROM senzory s
-    JOIN stav st ON s.id_stav = st.id_stav
-    GROUP BY s.nazev
-    """
-    
-    cursor.execute(query)
-    rows = cursor.fetchall()
-    
-    sensors = [
-        {
-            "id": row["id_sen"],
-            "nazev": row["nazev"],
-            "typ": row["typ"],
-            "misto": row["misto"],
-            "frekvence": row.get("frekvence"),
-            "stav": row["stav"],
-            "count_records": row["count_records"]
-        }
-        for row in rows
-    ]
-    
-    cursor.close()
-    conn.close()
-    
-    return sensors
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        query = """
+        SELECT s.id_sen, s.nazev, s.typ, s.misto, s.frekvence, st.barva as stav, 
+               (SELECT COUNT(*) FROM zaznamy z WHERE z.id_sen = s.id_sen) as count_records
+        FROM senzory s
+        JOIN stav st ON s.id_stav = st.id_stav
+        GROUP BY s.nazev
+        """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        sensors = [
+            {
+                "id": row["id_sen"],
+                "nazev": row["nazev"],
+                "typ": row["typ"],
+                "misto": row["misto"],
+                "frekvence": row.get("frekvence"),
+                "stav": row["stav"],
+                "count_records": row["count_records"]
+            }
+            for row in rows
+        ]
+        cursor.close()
+        conn.close()
+        return sensors
+    except Exception as e:
+        logger.error(f"Error fetching sensors: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
-# Endpoint pro získání počtu záznamů za poslední minutu
+# Endpoint to get record count in the last minute
 @app.get("/pocetzaminutu")
 def get_zaminutu():
-    conn = get_db_connection()  # Získání připojení k databázi
-    cursor = conn.cursor(dictionary=True)
-    
-    timezone = datetime.timezone(datetime.timedelta(hours=2)) # Časové pásmo pro cesko
-    current_time = datetime.datetime.now(timezone)  # Aktuální čas
-    print(f"current time  {current_time}")
-    one_minute_ago = current_time - datetime.timedelta(minutes=1)  # Čas před jednou minutou
-    print(current_time.strftime('%Y-%m-%d %H:%M:%S'))
-    print(one_minute_ago.strftime('%Y-%m-%d %H:%M:%S'))
-    # Dotaz na počet záznamů mezi current_time a one_minute_ago
-    query = """
-    SELECT COUNT(*) as count
-    FROM zaznamy
-    WHERE cas BETWEEN %s AND %s
-    """
-    
-    cursor.execute(query, (one_minute_ago.strftime('%Y-%m-%d %H:%M:%S'), current_time.strftime('%Y-%m-%d %H:%M:%S')))
-    
-    result = cursor.fetchone()
-    
-    cursor.close()
-    conn.close()
-    
-    return result
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        timezone = datetime.timezone(datetime.timedelta(hours=2))
+        current_time = datetime.datetime.now(timezone)
+        one_minute_ago = current_time - datetime.timedelta(minutes=1)
+        query = """
+        SELECT COUNT(*) as count
+        FROM zaznamy
+        WHERE cas BETWEEN %s AND %s
+        """
+        cursor.execute(query, (one_minute_ago.strftime('%Y-%m-%d %H:%M:%S'), current_time.strftime('%Y-%m-%d %H:%M:%S')))
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return result
+    except Exception as e:
+        logger.error(f"Error fetching record count: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
-# Endpoint pro získání počtu senzorů
+# Endpoint to get sensor count
 @app.get("/pocetsenzoru")
 def get_sensors():
-    conn = get_db_connection()  # Získání připojení k databázi
-    cursor = conn.cursor(dictionary=True)
-    
-    # Dotaz na počet senzorů
-    query = "SELECT COUNT(*) as count FROM senzory"
-    
-    cursor.execute(query)
-    result = cursor.fetchone()
-    
-    cursor.close()
-    conn.close()
-    
-    return result
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        query = "SELECT COUNT(*) as count FROM senzory"
+        cursor.execute(query)
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return result
+    except Exception as e:
+        logger.error(f"Error fetching sensor count: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
-# Endpoint pro graf ze zaznamu RAW DATA (CAS -> Pocet poslanych zaznamu)
-
+# Endpoint to get raw data graph
 @app.get("/grafzaznamu/raw")
 def graf_zaznamu():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
     try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
         query = "SELECT z.cas FROM zaznamy as z"
         cursor.execute(query)
         result = cursor.fetchall()
-
         data = {}
         for record in result:
-            cas = datetime.strptime(record['cas'], '%Y-%m-%d %H:%M:%S')
+            cas = datetime.datetime.strptime(record['cas'], '%Y-%m-%d %H:%M:%S')
             date_str = cas.strftime('%Y-%m-%d')
             if date_str in data:
                 data[date_str] += 1
             else:
                 data[date_str] = 1
-
         graph_data = [{"date": date, "count": count} for date, count in data.items()]
-
-        # Přidání logování
-        print("Vrácená data pro graf:", graph_data)
-
-    except Exception as e:
-        print(f"Error: {e}")
-        graph_data = []
-
-    finally:
+        logger.info(f"Returned data for graph: {graph_data}")
         cursor.close()
         conn.close()
+        return graph_data
+    except Exception as e:
+        logger.error(f"Error fetching raw graph data: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
-    return graph_data
-
-
-
+# Endpoint to get graph as HTML response
 @app.get("/grafzaznamu/graf", response_class=HTMLResponse)
 def graf_zaznamu_graf():
-    conn = get_db_connection()  # Get database connection
-    cursor = conn.cursor(dictionary=True)
-
     try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
         query = "SELECT z.cas FROM zaznamy as z"
         cursor.execute(query)
         results = cursor.fetchall()
-
-        # Convert the results to a DataFrame
         df = pd.DataFrame(results)
         df['cas'] = pd.to_datetime(df['cas'])
-
-        # Group by hour and count records
         df['hour'] = df['cas'].dt.floor('H')
         hourly_counts = df.groupby('hour').size().reset_index(name='counts')
-
-        # Create a Plotly graph
         fig = px.line(hourly_counts, x='hour', y='counts', title='Number of Records per Hour')
-
-        # Generate HTML for the graph
         graph_html = fig.to_html(full_html=False)
-
-    except Exception as e:
-        print(f"Error: {e}")
-        return f"<h1>Error: {e}</h1>"
-
-    finally:
         cursor.close()
         conn.close()
-
-    return HTMLResponse(content=graph_html)
+        return HTMLResponse(content=graph_html)
+    except Exception as e:
+        logger.error(f"Error generating graph: {e}")
+        return HTMLResponse(content=f"<h1>Error: {e}</h1>", status_code=500)
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(app, host='127.0.0.1', port=5000)  # Spuštění aplikace na portu 5000
+    uvicorn.run(app, host='0.0.0.0', port=5000)  # Spuštění aplikace na portu 5000

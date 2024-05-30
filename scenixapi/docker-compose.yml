@@ -6,7 +6,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      DB_HOST: host.docker.internal  # Special DNS name to access host machine
-      DB_USER: root
-      DB_PASSWORD: ''
+      DB_HOST: mariadb  # Use the service name for the database host
+      DB_USER: dcuk_user
+      DB_PASSWORD: dcuk  # Add DB_PASSWORD if needed
       DB_NAME: dcuk_mqtt_docker
