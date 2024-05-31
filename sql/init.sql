@@ -5063,7 +5063,32 @@ CREATE TABLE `zaznamy_view` (
 --
 DROP TABLE IF EXISTS `zaznamy_view`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `zaznamy_view`  AS WITH cte AS (SELECT `zaznamy`.`id_zaz` AS `id_zaz`, `zaznamy`.`id_sen` AS `id_sen`, `zaznamy`.`cas` AS `cas`, lead(`zaznamy`.`cas`,1) over ( partition by `zaznamy`.`id_sen` order by `zaznamy`.`cas`) AS `cas2` FROM `zaznamy`)  SELECT `cte`.`id_sen` AS `id_sen`, `cte`.`cas` AS `cas1`, `cte`.`cas2` AS `cas2`, timediff(`cte`.`cas2`,`cte`.`cas`) AS `rozdil` FROM `cte` WHERE `cte`.`cas2` is not null ORDER BY `cte`.`id_sen` ASC, `cte`.`cas` ASC`cas`  ;
+CREATE ALGORITHM=UNDEFINED 
+DEFINER=`root`@`localhost` 
+SQL SECURITY DEFINER 
+VIEW `zaznamy_view` AS
+WITH cte AS (
+    SELECT 
+        `zaznamy`.`id_zaz` AS `id_zaz`, 
+        `zaznamy`.`id_sen` AS `id_sen`, 
+        `zaznamy`.`cas` AS `cas`, 
+        LEAD(`zaznamy`.`cas`, 1) OVER (PARTITION BY `zaznamy`.`id_sen` ORDER BY `zaznamy`.`cas`) AS `cas2`
+    FROM 
+        `zaznamy`
+)
+SELECT 
+    `cte`.`id_sen` AS `id_sen`, 
+    `cte`.`cas` AS `cas1`, 
+    `cte`.`cas2` AS `cas2`, 
+    TIMEDIFF(`cte`.`cas2`, `cte`.`cas`) AS `rozdil`
+FROM 
+    `cte`
+WHERE 
+    `cte`.`cas2` IS NOT NULL
+ORDER BY 
+    `cte`.`id_sen` ASC, 
+    `cte`.`cas` ASC;
+
 
 --
 -- Indexes for dumped tables
