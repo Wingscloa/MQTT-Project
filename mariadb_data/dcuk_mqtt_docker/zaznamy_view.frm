@@ -1,0 +1,16 @@
+TYPE=VIEW
+query=with cte as (select `dcuk_mqtt_docker`.`zaznamy`.`id_zaz` AS `id_zaz`,`dcuk_mqtt_docker`.`zaznamy`.`id_sen` AS `id_sen`,`dcuk_mqtt_docker`.`zaznamy`.`cas` AS `cas`,lead(`dcuk_mqtt_docker`.`zaznamy`.`cas`,1) over ( partition by `dcuk_mqtt_docker`.`zaznamy`.`id_sen` order by `dcuk_mqtt_docker`.`zaznamy`.`cas`) AS `cas2` from `dcuk_mqtt_docker`.`zaznamy`)select `cte`.`id_sen` AS `id_sen`,`cte`.`cas` AS `cas1`,`cte`.`cas2` AS `cas2`,timediff(`cte`.`cas2`,`cte`.`cas`) AS `rozdil` from `cte` where `cte`.`cas2` is not null order by `cte`.`id_sen`,`cte`.`cas`
+md5=e188dfca8d02100f93408bb310839b7e
+updatable=1
+algorithm=0
+definer_user=root
+definer_host=localhost
+suid=1
+with_check_option=0
+timestamp=0001717139519311676
+create-version=2
+source=WITH cte AS (\n    SELECT \n        `zaznamy`.`id_zaz` AS `id_zaz`, \n        `zaznamy`.`id_sen` AS `id_sen`, \n        `zaznamy`.`cas` AS `cas`, \n        LEAD(`zaznamy`.`cas`, 1) OVER (PARTITION BY `zaznamy`.`id_sen` ORDER BY `zaznamy`.`cas`) AS `cas2`\n    FROM \n        `zaznamy`\n)\nSELECT \n    `cte`.`id_sen` AS `id_sen`, \n    `cte`.`cas` AS `cas1`, \n    `cte`.`cas2` AS `cas2`, \n    TIMEDIFF(`cte`.`cas2`, `cte`.`cas`) AS `rozdil`\nFROM \n    `cte`\nWHERE \n    `cte`.`cas2` IS NOT NULL\nORDER BY \n    `cte`.`id_sen` ASC, \n    `cte`.`cas` ASC
+client_cs_name=utf8mb4
+connection_cl_name=utf8mb4_general_ci
+view_body_utf8=with cte as (select `dcuk_mqtt_docker`.`zaznamy`.`id_zaz` AS `id_zaz`,`dcuk_mqtt_docker`.`zaznamy`.`id_sen` AS `id_sen`,`dcuk_mqtt_docker`.`zaznamy`.`cas` AS `cas`,lead(`dcuk_mqtt_docker`.`zaznamy`.`cas`,1) over ( partition by `dcuk_mqtt_docker`.`zaznamy`.`id_sen` order by `dcuk_mqtt_docker`.`zaznamy`.`cas`) AS `cas2` from `dcuk_mqtt_docker`.`zaznamy`)select `cte`.`id_sen` AS `id_sen`,`cte`.`cas` AS `cas1`,`cte`.`cas2` AS `cas2`,timediff(`cte`.`cas2`,`cte`.`cas`) AS `rozdil` from `cte` where `cte`.`cas2` is not null order by `cte`.`id_sen`,`cte`.`cas`
+mariadb-version=110302

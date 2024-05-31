@@ -5156,6 +5156,55 @@ ALTER TABLE `zaznamy`
   ADD CONSTRAINT `FK_senzory_TO_zaznamy` FOREIGN KEY (`id_sen`) REFERENCES `senzory` (`id_sen`);
 COMMIT;
 
+DELIMITER //
+
+CREATE OR REPLACE TRIGGER zmena_stavu
+AFTER INSERT ON zaznamy
+FOR EACH ROW
+BEGIN
+    DECLARE total_records INT;
+    DECLARE avg_frequency INT;
+
+    -- Počet záznamů pro daný senzor
+    SELECT COUNT(*) INTO total_records
+    FROM zaznamy
+    WHERE id_sen = NEW.id_sen;
+
+    -- Pokud jsou alespoň 3 záznamy a méně než 5 záznamů, změň stav senzoru na 2
+    IF total_records >= 3 AND total_records < 5 THEN
+        UPDATE senzory
+        SET id_stav = 2
+        WHERE id_sen = NEW.id_sen;
+    -- Pokud je počet záznamů mezi 5 a 7 (včetně), změň stav senzoru na 3
+    ELSEIF total_records >= 5 AND total_records < 7 THEN
+        UPDATE senzory
+        SET id_stav = 3
+        WHERE id_sen = NEW.id_sen;
+    -- Pokud je počet záznamů 7 nebo více, změň stav senzoru na 4 a nastav frekvenci
+    ELSEIF total_records >= 7 THEN
+        -- Výpočet průměrné frekvence za hodinu
+        WITH DiffInSeconds AS (
+            SELECT TIMESTAMPDIFF(SECOND, cas1, cas2) AS rozdil_sec
+            FROM zaznamy_view
+            WHERE id_sen = NEW.id_sen
+        ),
+        TotalTimeAndCount AS (
+            SELECT SUM(rozdil_sec) AS total_seconds, COUNT(*) AS count_records
+            FROM DiffInSeconds
+        )
+        SELECT ROUND((count_records / (total_seconds / 3600)),0) INTO avg_frequency
+        FROM TotalTimeAndCount;
+
+        -- Aktualizace stavu a frekvence senzoru
+        UPDATE senzory
+        SET id_stav = 4, frekvence = avg_frequency
+        WHERE id_sen = NEW.id_sen;
+    END IF;
+END;
+
+DELIMITER ;
+
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

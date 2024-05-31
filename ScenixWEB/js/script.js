@@ -105,9 +105,10 @@ async function generateSensorCards() {
                               sensor.count_records
                             } | Typ: ${sensor.typ} | Místo: ${
                               sensor.misto
-                            } | Frekvence: ${sensor.frekvence} | Počasí: ${
-                              sensor.weather || "N/A"
-                            }
+                            } |Frekvence (Očekávaná) : ${sensor.baseFrekvence}
+                            | Frekvence (Aktuální): ${
+                              sensor.frekvence
+                            } | Počasí: ${sensor.weather || "N/A"}
                         </p>
                     </div>
                     <div class="col-md-2 d-flex align-items-center">

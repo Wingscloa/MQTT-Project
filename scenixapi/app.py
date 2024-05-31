@@ -43,34 +43,67 @@ def get_db_connection():
 def get_senzory():
     try:
         conn = get_db_connection()
+        
+        # First cursor to get sensors
         cursor = conn.cursor(dictionary=True)
         query = """
         SELECT s.id_sen, s.nazev, s.typ, s.misto, s.frekvence, st.barva as stav, 
                (SELECT COUNT(*) FROM zaznamy z WHERE z.id_sen = s.id_sen) as count_records
-        FROM senzory s
+        FROM senzory AS s 
         JOIN stav st ON s.id_stav = st.id_stav
-        GROUP BY s.nazev
+        GROUP BY s.id_sen
         """
         cursor.execute(query)
         rows = cursor.fetchall()
-        sensors = [
-            {
+        cursor.close()  # Close first cursor
+
+        # Second cursor to get average frequency for each sensor
+        sensors = []
+        for row in rows:
+            cursor2 = conn.cursor(dictionary=True)
+            query2 = """
+            WITH DiffInSeconds AS (
+                SELECT
+                    TIMESTAMPDIFF(SECOND, cas1, cas2) AS rozdil_sec
+                FROM
+                    zaznamy_view
+                WHERE
+                    id_sen = %s
+            ),
+            TotalTimeAndCount AS (
+                SELECT
+                    SUM(rozdil_sec) AS total_seconds,
+                    COUNT(*) AS count_records
+                FROM
+                    DiffInSeconds
+            )
+            SELECT
+                ROUND((count_records / (total_seconds / 3600)),2) AS average_frequency_per_hour
+            FROM
+                TotalTimeAndCount;
+            """
+            cursor2.execute(query2, (row["id_sen"],))
+            result = cursor2.fetchone()
+            cursor2.close()  # Close second cursor
+
+            sensors.append({
                 "id": row["id_sen"],
                 "nazev": row["nazev"],
                 "typ": row["typ"],
                 "misto": row["misto"],
-                "frekvence": row.get("frekvence"),
+                "baseFrekvence": row["frekvence"],
+                "frekvence": result["average_frequency_per_hour"] if result else None,
                 "stav": row["stav"],
                 "count_records": row["count_records"]
-            }
-            for row in rows
-        ]
-        cursor.close()
+            })
+
         conn.close()
         return sensors
     except Exception as e:
         logger.error(f"Error fetching sensors: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
 
 # Endpoint to get record count in the last minute
 @app.get("/pocetzaminutu")
@@ -96,6 +129,8 @@ def get_zaminutu():
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 # Endpoint to get sensor count
+
+
 @app.get("/pocetsenzoru")
 def get_sensors():
     try:
